@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -13,19 +12,23 @@ import (
 	"matrix-api-challenge/go-api/internal/domain"
 )
 
+const statisticsPath = "/api/v1/statistics"
+
 type GatewayConfig struct {
 	BaseURL string
 	Timeout time.Duration
 }
 
 type NodeStatisticsGateway struct {
-	baseURL    string
-	httpClient *http.Client
+	endpointURL string
+	httpClient  *http.Client
 }
 
 func NewNodeStatisticsGateway(config GatewayConfig) *NodeStatisticsGateway {
+	baseURL := strings.TrimRight(config.BaseURL, "/")
+
 	return &NodeStatisticsGateway{
-		baseURL: strings.TrimRight(config.BaseURL, "/"),
+		endpointURL: baseURL + statisticsPath,
 		httpClient: &http.Client{
 			Timeout: config.Timeout,
 		},
@@ -35,41 +38,12 @@ func NewNodeStatisticsGateway(config GatewayConfig) *NodeStatisticsGateway {
 func (gateway *NodeStatisticsGateway) ComputeStatistics(
 	decomposition domain.QRDecomposition,
 ) (domain.Statistics, error) {
-	payload := statisticsRequest{
-		Matrices: []namedMatrixPayload{
-			{Name: "Q", Data: decomposition.Q.Data},
-			{Name: "R", Data: decomposition.R.Data},
-		},
-	}
-
-	requestBody, err := json.Marshal(payload)
-	if err != nil {
-		return domain.Statistics{}, fmt.Errorf("marshal statistics request: %w", err)
-	}
-
-	request, err := http.NewRequestWithContext(
-		context.Background(),
-		http.MethodPost,
-		gateway.baseURL+"/api/v1/statistics",
-		bytes.NewReader(requestBody),
-	)
-	if err != nil {
-		return domain.Statistics{}, fmt.Errorf("create statistics request: %w", err)
-	}
-
-	request.Header.Set("Content-Type", "application/json")
-
-	response, err := gateway.httpClient.Do(request)
+	requestBody, err := json.Marshal(statisticsRequestFromDecomposition(decomposition))
 	if err != nil {
 		return domain.Statistics{}, domain.ErrStatisticsUnavailable
 	}
-	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
-		return domain.Statistics{}, domain.ErrStatisticsUnavailable
-	}
-
-	responseBody, err := io.ReadAll(response.Body)
+	responseBody, err := gateway.post(requestBody)
 	if err != nil {
 		return domain.Statistics{}, domain.ErrStatisticsUnavailable
 	}
@@ -79,12 +53,31 @@ func (gateway *NodeStatisticsGateway) ComputeStatistics(
 		return domain.Statistics{}, domain.ErrStatisticsUnavailable
 	}
 
-	return domain.Statistics{
-		Max:               statisticsPayload.Max,
-		Min:               statisticsPayload.Min,
-		Average:           statisticsPayload.Average,
-		Sum:               statisticsPayload.Sum,
-		HasDiagonalMatrix: statisticsPayload.HasDiagonalMatrix,
-		DiagonalMatrices:  statisticsPayload.DiagonalMatrices,
-	}, nil
+	return statisticsPayload.toDomainStatistics(), nil
+}
+
+func (gateway *NodeStatisticsGateway) post(requestBody []byte) ([]byte, error) {
+	request, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodPost,
+		gateway.endpointURL,
+		bytes.NewReader(requestBody),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+
+	response, err := gateway.httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, domain.ErrStatisticsUnavailable
+	}
+
+	return io.ReadAll(response.Body)
 }

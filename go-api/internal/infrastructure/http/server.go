@@ -11,7 +11,7 @@ func NewServer(matrixHandler *MatrixHandler) *fiber.App {
 		AppName: "go-api",
 	})
 
-	app.Use(requestLogger)
+	app.Use(logRequest)
 
 	app.Get("/health", matrixHandler.HealthCheck)
 	app.Post("/api/v1/matrix/qr", matrixHandler.FactorizeMatrix)
@@ -19,7 +19,7 @@ func NewServer(matrixHandler *MatrixHandler) *fiber.App {
 	return app
 }
 
-func requestLogger(context *fiber.Ctx) error {
-	log.Printf("%s %s", context.Method(), context.Path())
-	return context.Next()
+func logRequest(ctx *fiber.Ctx) error {
+	log.Printf("%s %s", ctx.Method(), ctx.Path())
+	return ctx.Next()
 }

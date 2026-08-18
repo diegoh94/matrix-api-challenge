@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/gofiber/fiber/v2"
+
 	"matrix-api-challenge/go-api/internal/application"
 	"matrix-api-challenge/go-api/internal/config"
 	httpadapter "matrix-api-challenge/go-api/internal/infrastructure/http"
@@ -16,6 +18,16 @@ func main() {
 		log.Fatalf("load config: %v", err)
 	}
 
+	app := buildApplication(appConfig)
+
+	log.Printf("go-api listening on port %s", appConfig.Port)
+
+	if err := app.Listen(":" + appConfig.Port); err != nil {
+		log.Fatalf("start server: %v", err)
+	}
+}
+
+func buildApplication(appConfig config.Config) *fiber.App {
 	qrFactorizer := qr.NewGonumQRFactorizer()
 	statisticsGateway := statistics.NewNodeStatisticsGateway(statistics.GatewayConfig{
 		BaseURL: appConfig.NodeAPIURL,
@@ -24,11 +36,6 @@ func main() {
 
 	factorizeMatrixUseCase := application.NewFactorizeMatrixUseCase(qrFactorizer, statisticsGateway)
 	matrixHandler := httpadapter.NewMatrixHandler(factorizeMatrixUseCase)
-	app := httpadapter.NewServer(matrixHandler)
 
-	log.Printf("go-api listening on port %s", appConfig.Port)
-
-	if err := app.Listen(":" + appConfig.Port); err != nil {
-		log.Fatalf("start server: %v", err)
-	}
+	return httpadapter.NewServer(matrixHandler)
 }

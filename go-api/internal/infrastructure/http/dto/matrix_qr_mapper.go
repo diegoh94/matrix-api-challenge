@@ -18,14 +18,18 @@ func MatrixQRResponseFromDomain(result domain.FactorizeMatrixResult) MatrixQRRes
 			Q: roundMatrixValues(result.QR.Q.Data),
 			R: roundMatrixValues(result.QR.R.Data),
 		},
-		Statistics: StatisticsResponse{
-			Max:               roundToDecimalPlaces(result.Statistics.Max),
-			Min:               roundToDecimalPlaces(result.Statistics.Min),
-			Average:           roundToDecimalPlaces(result.Statistics.Average),
-			Sum:               roundToDecimalPlaces(result.Statistics.Sum),
-			HasDiagonalMatrix: result.Statistics.HasDiagonalMatrix,
-			DiagonalMatrices:  result.Statistics.DiagonalMatrices,
-		},
+		Statistics: mapStatisticsResponse(result.Statistics),
+	}
+}
+
+func mapStatisticsResponse(statistics domain.Statistics) StatisticsResponse {
+	return StatisticsResponse{
+		Max:               roundToDecimalPlaces(statistics.Max),
+		Min:               roundToDecimalPlaces(statistics.Min),
+		Average:           roundToDecimalPlaces(statistics.Average),
+		Sum:               roundToDecimalPlaces(statistics.Sum),
+		HasDiagonalMatrix: statistics.HasDiagonalMatrix,
+		DiagonalMatrices:  statistics.DiagonalMatrices,
 	}
 }
 
@@ -44,6 +48,6 @@ func roundMatrixValues(matrix [][]float64) [][]float64 {
 }
 
 func roundToDecimalPlaces(value float64) float64 {
-	factor := math.Pow(10, jsonDecimalPlaces)
+	factor := math.Pow10(jsonDecimalPlaces)
 	return math.Round(value*factor) / factor
 }
