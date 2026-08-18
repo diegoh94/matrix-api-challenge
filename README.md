@@ -29,6 +29,8 @@ Cada servicio tiene capas `domain` → `application` → `infrastructure`. La fa
 
 Si node-api no responde, go-api devuelve **502** y no entrega un QR incompleto.
 
+El cuello de botella matemático es la factorización QR (O(m·n²) con Householder); las estadísticas en Node son O(m·n) y no pesan en matrices pequeñas. Para el tamaño típico del challenge no hace falta optimizar, aunque habría margen: un solo pase para max/min/sum, menos copias al convertir entre `[][]float64` y `mat.Dense`, o serialización binaria si Q y R fueran muy grandes.
+
 ## JWT
 
 Implementado en ambas APIs con el mismo `JWT_SECRET`. Go reenvía el token a Node en cada llamada interna.
