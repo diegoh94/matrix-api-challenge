@@ -35,6 +35,7 @@ curl -X POST https://go-api-production-c0df.up.railway.app/api/v1/matrix/qr \
 - Swagger + documentación en `docs/`
 - Factorización QR (ver [DECISIONS.md](docs/DECISIONS.md))
 - Arquitectura en capas; 502 si node-api no responde; OpenAPI generado con swaggo
+- Frontend React + Tailwind en `frontend/`
 
 ## Stack
 
@@ -42,8 +43,9 @@ curl -X POST https://go-api-production-c0df.up.railway.app/api/v1/matrix/qr \
 |----------|------------|-----|
 | `go-api` | Go 1.24 + Fiber | API pública, factorización QR, orquestación |
 | `node-api` | Node.js 24 + Express | Servicio interno de estadísticas |
+| `frontend` | React + Vite + Tailwind | UI simple para probar la API |
 | Infra | Docker + Docker Compose | Ejecución local |
-| Cloud | Railway | Producción (2 servicios) |
+| Cloud | Railway | go-api, node-api y frontend |
 
 ## Inicio rápido (local)
 
@@ -56,6 +58,40 @@ Swagger local: http://localhost:8080/docs/index.html
 ```bash
 docker compose down
 ```
+
+## Frontend
+
+Con Docker (junto a las APIs):
+
+```bash
+docker compose up --build
+```
+
+UI: http://localhost:3001
+
+Solo frontend en desarrollo:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+http://localhost:5173 — proxy local hacia go-api.
+
+### Railway (servicio frontend)
+
+1. **New Service** → mismo repo → Root Directory: `frontend`
+2. Builder: **Dockerfile**
+3. Variable de build (obligatoria):
+
+```env
+VITE_API_URL=https://go-api-production-c0df.up.railway.app
+```
+
+4. **Generate Domain** → URL pública de la UI
+
+`VITE_API_URL` se embebe al compilar; redeploy tras cambiarla.
 
 ## Tests
 
