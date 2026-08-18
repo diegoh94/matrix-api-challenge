@@ -9,7 +9,8 @@
   },
   "scripts": {
     "start": "node src/main.js",
-    "dev": "node --watch src/main.js"
+    "dev": "node --watch src/main.js",
+    "test": "node --test src/application/ComputeMatrixStatisticsUseCase.test.js src/infrastructure/services/DiagonalMatrixChecker.test.js src/infrastructure/http/statisticsHttp.integration.test.js"
   },
   "dependencies": {
     "express": "^5.1.0",
