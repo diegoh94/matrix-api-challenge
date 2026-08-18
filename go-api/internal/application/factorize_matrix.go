@@ -6,15 +6,34 @@ import (
 )
 
 type FactorizeMatrixUseCase struct {
-	qrFactorizer ports.QRFactorizer
+	qrFactorizer       ports.QRFactorizer
+	statisticsGateway  ports.StatisticsGateway
 }
 
-func NewFactorizeMatrixUseCase(qrFactorizer ports.QRFactorizer) *FactorizeMatrixUseCase {
+func NewFactorizeMatrixUseCase(
+	qrFactorizer ports.QRFactorizer,
+	statisticsGateway ports.StatisticsGateway,
+) *FactorizeMatrixUseCase {
 	return &FactorizeMatrixUseCase{
-		qrFactorizer: qrFactorizer,
+		qrFactorizer:      qrFactorizer,
+		statisticsGateway: statisticsGateway,
 	}
 }
 
-func (useCase *FactorizeMatrixUseCase) Execute(matrix domain.Matrix) (domain.QRDecomposition, error) {
-	return useCase.qrFactorizer.Factorize(matrix)
+func (useCase *FactorizeMatrixUseCase) Execute(matrix domain.Matrix) (domain.FactorizeMatrixResult, error) {
+	qrDecomposition, err := useCase.qrFactorizer.Factorize(matrix)
+	if err != nil {
+		return domain.FactorizeMatrixResult{}, err
+	}
+
+	statistics, err := useCase.statisticsGateway.ComputeStatistics(qrDecomposition)
+	if err != nil {
+		return domain.FactorizeMatrixResult{}, err
+	}
+
+	return domain.FactorizeMatrixResult{
+		Input:      matrix,
+		QR:         qrDecomposition,
+		Statistics: statistics,
+	}, nil
 }
