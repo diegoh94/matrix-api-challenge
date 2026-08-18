@@ -1,9 +1,13 @@
 import { Router } from 'express';
 
-export function createStatisticsRoutes(statisticsController) {
+export function createStatisticsRoutes(statisticsController, jwtAuthMiddleware = null) {
   const router = Router();
 
-  router.post('/', statisticsController.computeStatistics);
+  if (jwtAuthMiddleware) {
+    router.post('/', jwtAuthMiddleware, statisticsController.computeStatistics);
+  } else {
+    router.post('/', statisticsController.computeStatistics);
+  }
 
   return router;
 }

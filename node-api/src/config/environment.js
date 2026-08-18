@@ -5,5 +5,11 @@ export function loadEnvironment() {
     throw new Error('NODE_API_PORT must be a positive integer');
   }
 
-  return { port };
+  const jwtSecret = process.env.JWT_SECRET ?? '';
+
+  return {
+    port,
+    jwtSecret,
+    authEnabled: jwtSecret.length > 0,
+  };
 }
