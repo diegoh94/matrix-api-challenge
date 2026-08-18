@@ -1,0 +1,32 @@
+---
+description: Stack, flujo y restricciones del Matrix API Challenge
+alwaysApply: true
+---
+
+# Matrix API Challenge — Core
+
+## Stack obligatorio
+- `go-api`: Go + Fiber — API pública, factorización QR, orquestación
+- `node-api`: Node.js + Express — servicio interno de estadísticas
+- Docker + Docker Compose para ejecución local
+
+## Fuera de alcance del core
+- Sin base de datos ni capa de persistencia
+- Sin repository, Unit of Work ni event bus
+- JWT y frontend son fases opcionales al final
+
+## Flujo
+Cliente → go-api → node-api (interno). El cliente no llama a node-api directamente.
+
+## Operación principal
+Factorización QR (no rotación). Ver `docs/DECISIONS.md`.
+
+## Prioridad
+correctitud → claridad → eficiencia → testing → deployment → opcionales
+
+## Commits
+Conventional Commits: `feat(go-api): ...`, `feat(node-api): ...`, `chore: ...`
+Un commit = una unidad lógica. No implementar todo de golpe.
+
+## Notas privadas
+Plan detallado en `.local/` (gitignored). Docs públicos: `README.md`, `docs/DECISIONS.md`, `docs/ARCHITECTURE.md`.

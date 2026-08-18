@@ -1,0 +1,31 @@
+---
+description: Contratos HTTP y comunicación entre go-api y node-api
+globs: go-api/**,node-api/**
+alwaysApply: false
+---
+
+# Contratos HTTP
+
+## go-api (público)
+- `POST /api/v1/matrix/qr` — recibe `{ "matrix": [[...]] }`, devuelve QR + statistics
+- `GET /health`
+
+## node-api (interno)
+- `POST /api/v1/statistics` — recibe `{ "matrices": [{ "name": "Q"|"R", "data": [[...]] }] }`
+- `GET /health`
+
+## Comunicación Go → Node
+- HTTP POST con `net/http`, timeout configurable (default 5s)
+- URL vía env: `NODE_API_URL`
+- Si node-api falla: go-api responde **502** (respuesta atómica, sin QR parcial)
+
+## Errores
+- 400 — matriz o payload inválido
+- 422 — matriz no factorizable (Go)
+- 502 — statistics service unavailable (Go)
+- 500 — error interno
+
+## Dominio numérico
+- QR con Gonum (`gonum/mat`)
+- Matriz diagonal: cuadrada, off-diagonal ≈ 0 con epsilon `1e-10`
+- Stats calculadas sobre todos los valores de Q y R combinados

@@ -1,0 +1,29 @@
+---
+description: Convenciones específicas del servicio node-api
+globs: node-api/**
+alwaysApply: false
+---
+
+# node-api
+
+## Estructura
+```
+src/domain/               → Matrix, MatrixStatistics, DomainError
+src/application/          → ComputeMatrixStatisticsUseCase
+src/infrastructure/
+  http/                   → routes, controllers, dto, middleware
+  services/               → StatisticsCalculator, DiagonalMatrixChecker
+src/main.js               → composition root
+```
+
+## Responsabilidades
+- Calcular max, min, average, sum sobre todos los valores recibidos
+- Detectar si alguna matriz es diagonal (`hasDiagonalMatrix`, `diagonalMatrices`)
+- Validar payload entrante antes de procesar
+
+## Controller vs Service
+- Controller: HTTP in/out, status codes, delegación al use case
+- StatisticsCalculator / DiagonalMatrixChecker: lógica pura, sin Express
+
+## Config
+Variable de entorno: `NODE_API_PORT` (default 3000)

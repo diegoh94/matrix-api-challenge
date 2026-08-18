@@ -1,0 +1,31 @@
+---
+description: Clean Architecture y Ports & Adapters para go-api y node-api
+globs: go-api/**,node-api/**
+alwaysApply: false
+---
+
+# Clean Architecture
+
+## Capas
+- `domain/` — entidades, reglas, errores tipados, ports (interfaces)
+- `application/` — use cases; orquestan dominio vía ports
+- `infrastructure/` — adaptadores HTTP, Gonum, HTTP client, middleware
+
+## Composition root
+- Go: `cmd/server/main.go`
+- Node: `src/main.js`
+Wiring explícito de dependencias aquí.
+
+## Ports (solo donde hay variación real)
+- Go: `QRFactorizer`, `StatisticsGateway`
+- Node: lógica pura en domain services; HTTP solo en infrastructure
+
+## Prohibido
+- Repository sin persistencia
+- Abstracciones con una sola implementación sin motivo de test
+- Lógica de negocio en handlers/routes/controllers
+
+## Estilo
+- Nombres descriptivos: `FactorizeMatrixUseCase`, `GonumQRFactorizer`
+- Sin comentarios que repitan el nombre de la función
+- JWT solo en middleware de infrastructure/http, nunca en domain ni use cases

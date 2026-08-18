@@ -1,0 +1,30 @@
+---
+description: Convenciones específicas del servicio go-api
+globs: go-api/**
+alwaysApply: false
+---
+
+# go-api
+
+## Estructura
+```
+internal/domain/          → Matrix, QRDecomposition, errors, ports/
+internal/application/     → FactorizeMatrixUseCase
+internal/infrastructure/
+  http/                   → handlers, dto, middleware
+  qr/                     → GonumQRFactorizer implements QRFactorizer
+  statistics/             → NodeStatisticsGateway implements StatisticsGateway
+cmd/server/main.go        → composition root
+```
+
+## QR
+Usar `gonum.org/v1/gonum/mat`. Validar matriz rectangular antes de factorizar.
+
+## Handler
+- Parsear JSON → DTO → dominio
+- Delegar al use case
+- Mapear errores de dominio a códigos HTTP
+- No llamar a Gonum ni HTTP client directamente desde el handler
+
+## Config
+Variables de entorno: `GO_API_PORT`, `NODE_API_URL`, `NODE_API_TIMEOUT_MS`
