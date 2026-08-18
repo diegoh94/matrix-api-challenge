@@ -3,38 +3,45 @@ package domain
 import "math"
 
 func NewMatrix(data [][]float64) (Matrix, error) {
-	if err := validateRectangularMatrix(data); err != nil {
+	if err := validateMatrixData(data); err != nil {
 		return Matrix{}, err
 	}
 
+	rowCount := len(data)
+	columnCount := len(data[0])
+
 	return Matrix{
-		Rows: len(data),
-		Cols: len(data[0]),
+		Rows: rowCount,
+		Cols: columnCount,
 		Data: data,
 	}, nil
 }
 
-func validateRectangularMatrix(data [][]float64) error {
+func validateMatrixData(data [][]float64) error {
 	if len(data) == 0 {
 		return ErrEmptyMatrix
 	}
 
-	expectedColumnCount := len(data[0])
-	if expectedColumnCount == 0 {
+	columnCount := len(data[0])
+	if columnCount == 0 {
 		return ErrEmptyMatrix
 	}
 
 	for _, row := range data {
-		if len(row) != expectedColumnCount {
+		if len(row) != columnCount {
 			return ErrInvalidMatrixShape
 		}
 
 		for _, value := range row {
-			if math.IsNaN(value) || math.IsInf(value, 0) {
+			if !isFiniteNumber(value) {
 				return ErrInvalidMatrixValue
 			}
 		}
 	}
 
 	return nil
+}
+
+func isFiniteNumber(value float64) bool {
+	return !math.IsNaN(value) && !math.IsInf(value, 0)
 }
