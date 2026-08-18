@@ -6,6 +6,7 @@ toolchain go1.24.13
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.15
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	gonum.org/v1/gonum v0.17.0
 )
 

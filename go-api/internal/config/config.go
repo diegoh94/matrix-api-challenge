@@ -8,9 +8,12 @@ import (
 )
 
 type Config struct {
-	Port            string
-	NodeAPIURL      string
-	NodeAPITimeout  time.Duration
+	Port           string
+	NodeAPIURL     string
+	NodeAPITimeout time.Duration
+	JWTSecret      string
+	APIKey         string
+	JWTExpiration  time.Duration
 }
 
 func Load() (Config, error) {
@@ -26,11 +29,23 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("invalid NODE_API_TIMEOUT_MS: %w", err)
 	}
 
+	jwtExpirationHours, err := parsePositiveInt(os.Getenv("JWT_EXPIRATION_HOURS"), 24)
+	if err != nil {
+		return Config{}, fmt.Errorf("invalid JWT_EXPIRATION_HOURS: %w", err)
+	}
+
 	return Config{
 		Port:           port,
 		NodeAPIURL:     nodeAPIURL,
 		NodeAPITimeout: time.Duration(timeoutMilliseconds) * time.Millisecond,
+		JWTSecret:      os.Getenv("JWT_SECRET"),
+		APIKey:         os.Getenv("API_KEY"),
+		JWTExpiration:  time.Duration(jwtExpirationHours) * time.Hour,
 	}, nil
+}
+
+func (config Config) AuthEnabled() bool {
+	return config.JWTSecret != "" && config.APIKey != ""
 }
 
 func firstNonEmpty(values ...string) string {
