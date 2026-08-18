@@ -1,0 +1,30 @@
+# Notas y planificación personal (solo local)
+.local/
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Go
+go-api/bin/
+go-api/vendor/
+
+# Node
+node-api/node_modules/
+node-api/coverage/
+node-api/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Docker
+.docker/
