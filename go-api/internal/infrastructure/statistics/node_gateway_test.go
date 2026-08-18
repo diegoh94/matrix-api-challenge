@@ -1,6 +1,7 @@
 package statistics_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -49,7 +50,7 @@ func TestNodeStatisticsGatewayComputeStatistics(t *testing.T) {
 		Timeout: 2 * time.Second,
 	})
 
-	result, err := gateway.ComputeStatistics(domain.QRDecomposition{
+	result, err := gateway.ComputeStatistics(context.Background(), domain.QRDecomposition{
 		Q: domain.Matrix{
 			Rows: 2,
 			Cols: 2,
@@ -85,7 +86,7 @@ func TestNodeStatisticsGatewayReturnsUnavailableOnServerError(t *testing.T) {
 		Timeout: 2 * time.Second,
 	})
 
-	_, err := gateway.ComputeStatistics(domain.QRDecomposition{})
+	_, err := gateway.ComputeStatistics(context.Background(), domain.QRDecomposition{})
 	if err != domain.ErrStatisticsUnavailable {
 		t.Fatalf("expected ErrStatisticsUnavailable, got %v", err)
 	}

@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
 	"matrix-api-challenge/go-api/internal/domain"
+	"matrix-api-challenge/go-api/internal/infrastructure/auth"
 )
 
 const statisticsPath = "/api/v1/statistics"
@@ -36,6 +38,7 @@ func NewNodeStatisticsGateway(config GatewayConfig) *NodeStatisticsGateway {
 }
 
 func (gateway *NodeStatisticsGateway) ComputeStatistics(
+	ctx context.Context,
 	decomposition domain.QRDecomposition,
 ) (domain.Statistics, error) {
 	requestBody, err := json.Marshal(statisticsRequestFromDecomposition(decomposition))
@@ -43,7 +46,7 @@ func (gateway *NodeStatisticsGateway) ComputeStatistics(
 		return domain.Statistics{}, domain.ErrStatisticsUnavailable
 	}
 
-	responseBody, err := gateway.post(requestBody)
+	responseBody, err := gateway.post(ctx, requestBody)
 	if err != nil {
 		return domain.Statistics{}, domain.ErrStatisticsUnavailable
 	}
@@ -56,9 +59,9 @@ func (gateway *NodeStatisticsGateway) ComputeStatistics(
 	return statisticsPayload.toDomainStatistics(), nil
 }
 
-func (gateway *NodeStatisticsGateway) post(requestBody []byte) ([]byte, error) {
+func (gateway *NodeStatisticsGateway) post(ctx context.Context, requestBody []byte) ([]byte, error) {
 	request, err := http.NewRequestWithContext(
-		context.Background(),
+		ctx,
 		http.MethodPost,
 		gateway.endpointURL,
 		bytes.NewReader(requestBody),
@@ -68,6 +71,10 @@ func (gateway *NodeStatisticsGateway) post(requestBody []byte) ([]byte, error) {
 	}
 
 	request.Header.Set("Content-Type", "application/json")
+
+	if accessToken, ok := auth.TokenFromContext(ctx); ok {
+		request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	}
 
 	response, err := gateway.httpClient.Do(request)
 	if err != nil {
