@@ -2,203 +2,120 @@
 
 Solución para el coding challenge de Interseguro: dos APIs REST que reciben una matriz, calculan su factorización QR y devuelven estadísticas sobre las matrices resultantes.
 
+## Despliegue en producción (Railway)
+
+| | |
+|---|---|
+| **API pública** | https://go-api-production-c0df.up.railway.app |
+| **Health** | https://go-api-production-c0df.up.railway.app/health |
+| **Swagger** | https://go-api-production-c0df.up.railway.app/docs/index.html |
+
+Arquitectura en cloud: dos servicios Railway (`go-api` expuesto, `node-api` en red privada). El cliente solo interactúa con go-api.
+
+```bash
+# Token (usar la API_KEY configurada en Railway)
+curl -X POST https://go-api-production-c0df.up.railway.app/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"apiKey": "<API_KEY>"}'
+
+# Factorización QR + estadísticas
+curl -X POST https://go-api-production-c0df.up.railway.app/api/v1/matrix/qr \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"matrix": [[1, 2], [3, 4], [5, 6]]}'
+```
+
+## Cobertura del desafío
+
+| Requisito | Estado |
+|-----------|--------|
+| API Go + Fiber — matriz → factorización QR | ✅ |
+| API Node + Express — estadísticas sobre Q y R | ✅ |
+| max, min, promedio, suma, matriz diagonal | ✅ |
+| Comunicación HTTP entre APIs | ✅ |
+| Docker + Docker Compose | ✅ |
+| Despliegue en cloud | ✅ Railway |
+| Documentación | ✅ README, arquitectura, decisiones, OpenAPI |
+| JWT (opcional) | ✅ |
+| Tests (opcional) | ✅ dominio, use cases, HTTP e integración Go↔Node |
+| Frontend (opcional) | — |
+
+**Decisión documentada:** el enunciado menciona rotación en la arquitectura general, pero especifica QR en los requisitos funcionales. Ver [docs/DECISIONS.md](docs/DECISIONS.md).
+
+**Adicional (no pedido explícitamente):** Clean Architecture, Swagger UI, respuesta atómica (502 si Node falla, sin QR parcial), OpenAPI generado con swaggo.
+
 ## Stack
 
 | Servicio | Tecnología | Rol |
 |----------|------------|-----|
 | `go-api` | Go 1.24 + Fiber | API pública, factorización QR, orquestación |
 | `node-api` | Node.js 24 + Express | Servicio interno de estadísticas |
-| Infra | Docker + Docker Compose | Ejecución local y despliegue |
+| Infra | Docker + Docker Compose | Ejecución local |
+| Cloud | Railway | Producción (2 servicios) |
 
-## Requisitos
-
-- Docker Desktop
-- Node.js >= 24 (solo desarrollo local sin Docker)
-- Go 1.24 (solo desarrollo local sin Docker)
-
-## Inicio rápido
+## Inicio rápido (local)
 
 ```bash
 docker compose up --build
 ```
 
-Verificar:
-
-```bash
-curl http://localhost:8080/health
-```
-
-Obtener token JWT:
-
-```bash
-curl -X POST http://localhost:8080/auth/token \
-  -H "Content-Type: application/json" \
-  -d '{"apiKey": "change-me-api-key"}'
-```
-
-Procesar una matriz (usar el token obtenido):
-
-```bash
-curl -X POST http://localhost:8080/api/v1/matrix/qr \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
-  -d '{"matrix": [[1, 2], [3, 4], [5, 6]]}'
-```
-
-Detener:
+Swagger local: http://localhost:8080/docs/index.html
 
 ```bash
 docker compose down
 ```
 
-## API pública (go-api)
+## Tests
 
-### `GET /health`
+Pruebas sobre lógica de negocio e integración (no smoke tests vacíos).
 
-```json
-{ "status": "ok", "service": "go-api" }
+**go-api** — validación de matrices, QR (Q×R = original), orquestación use case, JWT, gateway HTTP con reenvío de token.
+
+**node-api** — use case Q+R, detección diagonal con tolerancia numérica, endpoint HTTP + JWT.
+
+```bash
+# go-api
+cd go-api && go test ./...
+
+# node-api (Node >= 24)
+cd node-api && npm test
 ```
 
-### `POST /auth/token`
+Con Docker (sin Go/Node local):
 
-Emite un JWT válido para consumir la API.
-
-**Request**
-
-```json
-{ "apiKey": "change-me-api-key" }
+```bash
+docker run --rm -v "%cd%/go-api:/app" -w /app golang:1.24-alpine go test ./...
+docker run --rm -v "%cd%/node-api:/app" -w /app node:24-alpine npm test
 ```
 
-**Response 200**
+## API
 
-```json
-{ "token": "...", "expiresIn": 86400 }
-```
+Contratos, schemas y ejemplos en **Swagger**:
 
-### `POST /api/v1/matrix/qr`
+| Entorno | Swagger |
+|---------|---------|
+| Producción | https://go-api-production-c0df.up.railway.app/docs/index.html |
+| Local | http://localhost:8080/docs/index.html |
 
-Requiere header `Authorization: Bearer <token>` cuando JWT está habilitado.
+Endpoints públicos (go-api): `GET /health`, `POST /auth/token`, `POST /api/v1/matrix/qr`.
 
-**Request**
-
-```json
-{
-  "matrix": [
-    [1, 2],
-    [3, 4],
-    [5, 6]
-  ]
-}
-```
-
-**Response 200**
-
-```json
-{
-  "input": { "rows": 3, "cols": 2 },
-  "qr": {
-    "Q": [[...], [...], [...]],
-    "R": [[...], [...], [...]]
-  },
-  "statistics": {
-    "max": 0.897085,
-    "min": -7.437357,
-    "average": -0.881237,
-    "sum": -13.218558,
-    "hasDiagonalMatrix": false,
-    "diagonalMatrices": []
-  }
-}
-```
-
-**Errores**
-
-| Código | Caso |
-|--------|------|
-| 400 | JSON inválido o matriz inválida |
-| 422 | Matriz no factorizable |
-| 502 | Servicio de estadísticas no disponible |
-| 500 | Error interno |
-
-## API interna (node-api)
-
-Expuesta solo en la red Docker. Go la consume vía HTTP.
-
-### `POST /api/v1/statistics`
-
-Recibe las matrices Q y R, devuelve max, min, average, sum y detección de matriz diagonal.
+node-api es interno (`POST /api/v1/statistics`); no expuesto al cliente.
 
 ## Variables de entorno
 
-Copiar `.env.example` como referencia.
+Ver `.env.example`. En Railway: `JWT_SECRET` compartido en ambos servicios; `NODE_API_URL` en go-api apunta a node-api por red privada.
 
-| Variable | Servicio | Default | Descripción |
-|----------|----------|---------|-------------|
-| `GO_API_PORT` | go-api | `8080` | Puerto HTTP |
-| `NODE_API_URL` | go-api | `http://localhost:3000` | URL de node-api |
-| `NODE_API_TIMEOUT_MS` | go-api | `5000` | Timeout hacia node-api |
-| `NODE_API_PORT` | node-api | `3000` | Puerto HTTP |
-| `JWT_SECRET` | ambos | — | Secreto compartido para firmar/validar JWT |
-| `JWT_EXPIRATION_HOURS` | go-api | `24` | Duración del token |
-| `API_KEY` | go-api | — | Clave para obtener token en `/auth/token` |
-
-En Docker Compose, `NODE_API_URL` se configura como `http://node-api:3000`.
-
-## Estructura del proyecto
-
-```text
-matrix-api-challenge/
-├── go-api/                 # Go + Fiber
-│   ├── cmd/server/         # entry point
-│   └── internal/
-│       ├── domain/         # entidades, ports
-│       ├── application/    # use cases
-│       └── infrastructure/ # HTTP, Gonum, gateway Node
-├── node-api/               # Node + Express
-│   └── src/
-│       ├── domain/
-│       ├── application/
-│       └── infrastructure/
-├── docker-compose.yml
-└── docs/
-    ├── ARCHITECTURE.md
-    └── DECISIONS.md
-```
-
-## Desarrollo local (sin Docker)
-
-**node-api**
-
-```bash
-cd node-api
-npm install
-npm run dev
-```
-
-**go-api**
-
-```bash
-cd go-api
-go run ./cmd/server
-```
-
-Asegurar `NODE_API_URL=http://localhost:3000`.
+| Variable | Servicio | Descripción |
+|----------|----------|-------------|
+| `API_KEY` | go-api | Clave para `/auth/token` |
+| `JWT_SECRET` | ambos | Firma/validación JWT |
+| `NODE_API_URL` | go-api | URL interna de node-api |
+| `JWT_EXPIRATION_HOURS` | go-api | Duración del token |
 
 ## Documentación
 
 - [Arquitectura](docs/ARCHITECTURE.md)
 - [Decisiones técnicas](docs/DECISIONS.md)
 - [OpenAPI — generación](docs/openapi.md)
-- **Swagger UI (go-api):** http://localhost:8080/docs/index.html
 
-### Regenerar OpenAPI go-api
-
-```bash
-cd go-api
-swag init -g cmd/server/main.go -o docs --parseDependency --parseInternal
-```
-
-## Próximos pasos
-
-- Despliegue en cloud (Railway / Render)
-- Frontend (opcional)
+Regenerar spec go-api: ver [docs/openapi.md](docs/openapi.md).
