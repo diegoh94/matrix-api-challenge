@@ -11,7 +11,6 @@ FROM node:24-alpine AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NODE_API_PORT=3000
 
 RUN addgroup -S nodeapi && adduser -S nodeapi -G nodeapi
 

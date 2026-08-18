@@ -19,7 +19,6 @@ RUN apk add --no-cache ca-certificates wget \
 
 COPY --from=builder /app/server ./server
 
-ENV GO_API_PORT=8080
 ENV NODE_API_URL=http://node-api:3000
 ENV NODE_API_TIMEOUT_MS=5000
 

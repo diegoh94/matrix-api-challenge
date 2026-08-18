@@ -17,7 +17,7 @@ type Config struct {
 }
 
 func Load() (Config, error) {
-	port := firstNonEmpty(os.Getenv("GO_API_PORT"), os.Getenv("PORT"), "8080")
+	port := firstNonEmpty(os.Getenv("PORT"), os.Getenv("GO_API_PORT"), "8080")
 
 	nodeAPIURL := os.Getenv("NODE_API_URL")
 	if nodeAPIURL == "" {
