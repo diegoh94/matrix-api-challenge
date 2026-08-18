@@ -1,6 +1,6 @@
-# Matrix API Challenge
+# Matrix API
 
-Solución para el coding challenge de Interseguro: dos APIs REST que reciben una matriz, calculan su factorización QR y devuelven estadísticas sobre las matrices resultantes.
+Dos APIs REST: Go calcula la factorización QR de una matriz; Node agrega estadísticas sobre Q y R.
 
 ## Despliegue en producción (Railway)
 
@@ -25,24 +25,16 @@ curl -X POST https://go-api-production-c0df.up.railway.app/api/v1/matrix/qr \
   -d '{"matrix": [[1, 2], [3, 4], [5, 6]]}'
 ```
 
-## Cobertura del desafío
+## Implementación
 
-| Requisito | Estado |
-|-----------|--------|
-| API Go + Fiber — matriz → factorización QR | ✅ |
-| API Node + Express — estadísticas sobre Q y R | ✅ |
-| max, min, promedio, suma, matriz diagonal | ✅ |
-| Comunicación HTTP entre APIs | ✅ |
-| Docker + Docker Compose | ✅ |
-| Despliegue en cloud | ✅ Railway |
-| Documentación | ✅ README, arquitectura, decisiones, OpenAPI |
-| JWT (opcional) | ✅ |
-| Tests (opcional) | ✅ dominio, use cases, HTTP e integración Go↔Node |
-| Frontend (opcional) | — |
-
-**Decisión documentada:** el enunciado menciona rotación en la arquitectura general, pero especifica QR en los requisitos funcionales. Ver [docs/DECISIONS.md](docs/DECISIONS.md).
-
-**Adicional (no pedido explícitamente):** Clean Architecture, Swagger UI, respuesta atómica (502 si Node falla, sin QR parcial), OpenAPI generado con swaggo.
+- **go-api** (Fiber): recibe matriz, factoriza QR, llama a node-api por HTTP
+- **node-api** (Express): max, min, promedio, suma y detección de matriz diagonal
+- Docker Compose en local; Railway en producción (go-api público, node-api en red privada)
+- JWT en endpoints de negocio; token reenviado de Go a Node
+- Tests de dominio, use cases e integración HTTP
+- Swagger + documentación en `docs/`
+- Factorización QR (ver [DECISIONS.md](docs/DECISIONS.md))
+- Arquitectura en capas; 502 si node-api no responde; OpenAPI generado con swaggo
 
 ## Stack
 
