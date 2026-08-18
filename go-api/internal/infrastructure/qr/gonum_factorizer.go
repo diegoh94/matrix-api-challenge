@@ -13,43 +13,44 @@ func NewGonumQRFactorizer() *GonumQRFactorizer {
 }
 
 func (factorizer *GonumQRFactorizer) Factorize(matrix domain.Matrix) (domain.QRDecomposition, error) {
-	denseMatrix := toDenseMatrix(matrix)
+	workMatrix := toDenseMatrix(matrix)
 
-	var qrFactorization mat.QR
-	qrFactorization.Factorize(denseMatrix)
+	var decomposition mat.QR
+	decomposition.Factorize(workMatrix)
 
-	var qMatrix mat.Dense
-	qrFactorization.QTo(&qMatrix)
+	var qDense mat.Dense
+	decomposition.QTo(&qDense)
 
-	var rMatrix mat.Dense
-	qrFactorization.RTo(&rMatrix)
+	var rDense mat.Dense
+	decomposition.RTo(&rDense)
 
 	return domain.QRDecomposition{
-		Q: matrixFromDense(&qMatrix),
-		R: matrixFromDense(&rMatrix),
+		Q: denseToMatrix(&qDense),
+		R: denseToMatrix(&rDense),
 	}, nil
 }
 
 func toDenseMatrix(matrix domain.Matrix) *mat.Dense {
-	denseMatrix := mat.NewDense(matrix.Rows, matrix.Cols, nil)
+	rows, cols := matrix.Rows, matrix.Cols
+	buffer := make([]float64, rows*cols)
 
-	for rowIndex := 0; rowIndex < matrix.Rows; rowIndex++ {
-		denseMatrix.SetRow(rowIndex, matrix.Data[rowIndex])
+	for rowIndex, row := range matrix.Data {
+		copy(buffer[rowIndex*cols:(rowIndex+1)*cols], row)
 	}
 
-	return denseMatrix
+	return mat.NewDense(rows, cols, buffer)
 }
 
-func matrixFromDense(denseMatrix *mat.Dense) domain.Matrix {
+func denseToMatrix(denseMatrix *mat.Dense) domain.Matrix {
 	rowCount, columnCount := denseMatrix.Dims()
 	data := make([][]float64, rowCount)
 
 	for rowIndex := 0; rowIndex < rowCount; rowIndex++ {
-		data[rowIndex] = make([]float64, columnCount)
-
+		row := make([]float64, columnCount)
 		for columnIndex := 0; columnIndex < columnCount; columnIndex++ {
-			data[rowIndex][columnIndex] = denseMatrix.At(rowIndex, columnIndex)
+			row[columnIndex] = denseMatrix.At(rowIndex, columnIndex)
 		}
+		data[rowIndex] = row
 	}
 
 	return domain.Matrix{
