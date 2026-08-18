@@ -1,10 +1,15 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
+const API_KEY = import.meta.env.VITE_API_KEY ?? '';
 
-async function requestToken(apiKey) {
+async function requestToken() {
+  if (!API_KEY) {
+    throw new Error('Frontend sin VITE_API_KEY configurada');
+  }
+
   const response = await fetch(`${API_BASE}/auth/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ apiKey }),
+    body: JSON.stringify({ apiKey: API_KEY }),
   });
 
   const data = await response.json();
@@ -16,8 +21,8 @@ async function requestToken(apiKey) {
   return data.token;
 }
 
-export async function factorizeMatrix(matrix, apiKey) {
-  const token = await requestToken(apiKey);
+export async function factorizeMatrix(matrix) {
+  const token = await requestToken();
 
   const response = await fetch(`${API_BASE}/api/v1/matrix/qr`, {
     method: 'POST',
