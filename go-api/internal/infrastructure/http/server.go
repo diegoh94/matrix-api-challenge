@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	swagger "github.com/swaggo/fiber-swagger"
 
 	_ "matrix-api-challenge/go-api/docs"
@@ -27,6 +28,7 @@ func NewServer(
 		AppName: "go-api",
 	})
 
+	app.Use(cors.New())
 	app.Use(logRequest)
 
 	app.Get("/docs/*", swagger.WrapHandler)
