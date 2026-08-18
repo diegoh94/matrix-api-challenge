@@ -45,6 +45,7 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: http://localhost:8080
+        VITE_API_KEY: ${API_KEY:-change-me-api-key}
     container_name: frontend
     ports:
       - "3001:3000"
