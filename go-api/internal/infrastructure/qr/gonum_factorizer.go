@@ -13,11 +13,7 @@ func NewGonumQRFactorizer() *GonumQRFactorizer {
 }
 
 func (factorizer *GonumQRFactorizer) Factorize(matrix domain.Matrix) (domain.QRDecomposition, error) {
-	denseMatrix := mat.NewDense(matrix.Rows, matrix.Cols, nil)
-
-	for rowIndex := 0; rowIndex < matrix.Rows; rowIndex++ {
-		denseMatrix.SetRow(rowIndex, matrix.Data[rowIndex])
-	}
+	denseMatrix := toDenseMatrix(matrix)
 
 	var qrFactorization mat.QR
 	qrFactorization.Factorize(denseMatrix)
@@ -32,6 +28,16 @@ func (factorizer *GonumQRFactorizer) Factorize(matrix domain.Matrix) (domain.QRD
 		Q: matrixFromDense(&qMatrix),
 		R: matrixFromDense(&rMatrix),
 	}, nil
+}
+
+func toDenseMatrix(matrix domain.Matrix) *mat.Dense {
+	denseMatrix := mat.NewDense(matrix.Rows, matrix.Cols, nil)
+
+	for rowIndex := 0; rowIndex < matrix.Rows; rowIndex++ {
+		denseMatrix.SetRow(rowIndex, matrix.Data[rowIndex])
+	}
+
+	return denseMatrix
 }
 
 func matrixFromDense(denseMatrix *mat.Dense) domain.Matrix {

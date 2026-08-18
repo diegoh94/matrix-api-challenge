@@ -13,8 +13,20 @@ func NewMatrix(data [][]float64) (Matrix, error) {
 	return Matrix{
 		Rows: rowCount,
 		Cols: columnCount,
-		Data: data,
+		Data: cloneMatrixData(data),
 	}, nil
+}
+
+func cloneMatrixData(data [][]float64) [][]float64 {
+	clonedData := make([][]float64, len(data))
+
+	for rowIndex, row := range data {
+		clonedRow := make([]float64, len(row))
+		copy(clonedRow, row)
+		clonedData[rowIndex] = clonedRow
+	}
+
+	return clonedData
 }
 
 func validateMatrixData(data [][]float64) error {
