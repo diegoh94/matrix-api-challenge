@@ -7,6 +7,7 @@ import (
 
 	"matrix-api-challenge/go-api/internal/application"
 	"matrix-api-challenge/go-api/internal/config"
+	"matrix-api-challenge/go-api/internal/infrastructure/auth"
 	httpadapter "matrix-api-challenge/go-api/internal/infrastructure/http"
 	"matrix-api-challenge/go-api/internal/infrastructure/qr"
 	"matrix-api-challenge/go-api/internal/infrastructure/statistics"
@@ -37,5 +38,19 @@ func buildApplication(appConfig config.Config) *fiber.App {
 	factorizeMatrixUseCase := application.NewFactorizeMatrixUseCase(qrFactorizer, statisticsGateway)
 	matrixHandler := httpadapter.NewMatrixHandler(factorizeMatrixUseCase)
 
-	return httpadapter.NewServer(matrixHandler)
+	serverConfig := httpadapter.ServerConfig{
+		AuthEnabled: appConfig.AuthEnabled(),
+		APIKey:      appConfig.APIKey,
+	}
+
+	if serverConfig.AuthEnabled {
+		serverConfig.TokenService = auth.NewTokenService(appConfig.JWTSecret, appConfig.JWTExpiration)
+	}
+
+	authHandler := (*httpadapter.AuthHandler)(nil)
+	if serverConfig.AuthEnabled {
+		authHandler = httpadapter.NewAuthHandler(serverConfig.TokenService, appConfig.APIKey)
+	}
+
+	return httpadapter.NewServer(serverConfig, matrixHandler, authHandler)
 }

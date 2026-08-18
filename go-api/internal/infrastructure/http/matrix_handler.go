@@ -1,17 +1,20 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
 
 	"matrix-api-challenge/go-api/internal/domain"
+	"matrix-api-challenge/go-api/internal/infrastructure/auth"
 	"matrix-api-challenge/go-api/internal/infrastructure/http/dto"
+	"matrix-api-challenge/go-api/internal/infrastructure/http/middleware"
 )
 
 type matrixFactorizer interface {
-	Execute(matrix domain.Matrix) (domain.FactorizeMatrixResult, error)
+	Execute(ctx context.Context, matrix domain.Matrix) (domain.FactorizeMatrixResult, error)
 }
 
 type MatrixHandler struct {
@@ -42,7 +45,9 @@ func (handler *MatrixHandler) FactorizeMatrix(ctx *fiber.Ctx) error {
 		return respondWithDomainError(ctx, err)
 	}
 
-	result, err := handler.factorizeMatrixUseCase.Execute(matrix)
+	requestContext := auth.ContextWithToken(ctx.Context(), middleware.AuthTokenFromRequest(ctx))
+
+	result, err := handler.factorizeMatrixUseCase.Execute(requestContext, matrix)
 	if err != nil {
 		return respondWithDomainError(ctx, err)
 	}

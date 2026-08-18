@@ -9,6 +9,15 @@ type ErrorResponse struct {
 	Code  string `json:"code"`
 }
 
+type AuthTokenRequest struct {
+	APIKey string `json:"apiKey"`
+}
+
+type AuthTokenResponse struct {
+	Token     string `json:"token"`
+	ExpiresIn int64  `json:"expiresIn"`
+}
+
 type MatrixDimensionsResponse struct {
 	Rows int `json:"rows"`
 	Cols int `json:"cols"`
