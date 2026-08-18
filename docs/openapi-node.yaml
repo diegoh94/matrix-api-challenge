@@ -1,0 +1,107 @@
+openapi: 3.0.3
+info:
+  title: Matrix API Challenge — node-api (internal)
+  description: Servicio interno de estadísticas. Consumido por go-api, no expuesto al cliente final.
+  version: 1.0.0
+
+servers:
+  - url: http://node-api:3000
+    description: Docker internal network
+
+tags:
+  - name: Health
+  - name: Statistics
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: node-api
+
+  /api/v1/statistics:
+    post:
+      tags: [Statistics]
+      summary: Compute statistics from QR matrices
+      operationId: computeStatistics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatisticsRequest"
+      responses:
+        "200":
+          description: Computed statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatisticsResponse"
+        "400":
+          description: Invalid payload
+        "401":
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    StatisticsRequest:
+      type: object
+      required: [matrices]
+      properties:
+        matrices:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [name, data]
+            properties:
+              name:
+                type: string
+                example: Q
+              data:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+
+    StatisticsResponse:
+      type: object
+      required: [max, min, average, sum, hasDiagonalMatrix, diagonalMatrices]
+      properties:
+        max:
+          type: number
+        min:
+          type: number
+        average:
+          type: number
+        sum:
+          type: number
+        hasDiagonalMatrix:
+          type: boolean
+        diagonalMatrices:
+          type: array
+          items:
+            type: string

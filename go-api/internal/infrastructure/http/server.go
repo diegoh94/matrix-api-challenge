@@ -4,6 +4,9 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	swagger "github.com/swaggo/fiber-swagger"
+
+	_ "matrix-api-challenge/go-api/docs"
 
 	"matrix-api-challenge/go-api/internal/infrastructure/auth"
 	"matrix-api-challenge/go-api/internal/infrastructure/http/middleware"
@@ -25,6 +28,8 @@ func NewServer(
 	})
 
 	app.Use(logRequest)
+
+	app.Get("/docs/*", swagger.WrapHandler)
 
 	app.Get("/health", matrixHandler.HealthCheck)
 

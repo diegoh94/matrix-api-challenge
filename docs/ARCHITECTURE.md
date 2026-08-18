@@ -84,3 +84,11 @@ go-api espera a que node-api esté healthy antes de iniciar.
 ## Decisiones de diseño
 
 Ver [DECISIONS.md](DECISIONS.md) para el detalle de cada decisión.
+
+## Documentación API
+
+| Recurso | Ubicación |
+|---------|-----------|
+| Swagger UI (go-api) | http://localhost:8080/docs/index.html |
+| OpenAPI generado (go-api) | `go-api/docs/swagger.yaml` |
+| Guía regeneración | [docs/openapi.md](docs/openapi.md) |

@@ -1,3 +1,12 @@
+// @title Matrix API Challenge — go-api
+// @version 1.0
+// @description API pública para factorización QR de matrices y obtención de estadísticas.
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT token. Format: Bearer {token}
 package main
 
 import (

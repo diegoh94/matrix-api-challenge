@@ -188,9 +188,17 @@ Asegurar `NODE_API_URL=http://localhost:3000`.
 
 - [Arquitectura](docs/ARCHITECTURE.md)
 - [Decisiones técnicas](docs/DECISIONS.md)
+- [OpenAPI — generación](docs/openapi.md)
+- **Swagger UI (go-api):** http://localhost:8080/docs/index.html
+
+### Regenerar OpenAPI go-api
+
+```bash
+cd go-api
+swag init -g cmd/server/main.go -o docs --parseDependency --parseInternal
+```
 
 ## Próximos pasos
 
-- Swagger / OpenAPI
 - Despliegue en cloud (Railway / Render)
 - Frontend (opcional)

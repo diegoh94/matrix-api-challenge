@@ -27,13 +27,35 @@ func NewMatrixHandler(factorizeMatrixUseCase matrixFactorizer) *MatrixHandler {
 	}
 }
 
+// HealthCheck returns the service health status.
+//
+// @Summary Health check
+// @Tags Health
+// @Produce json
+// @Success 200 {object} dto.HealthResponse
+// @Router /health [get]
 func (handler *MatrixHandler) HealthCheck(ctx *fiber.Ctx) error {
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
-		"status":  "ok",
-		"service": "go-api",
+	return ctx.Status(fiber.StatusOK).JSON(dto.HealthResponse{
+		Status:  "ok",
+		Service: "go-api",
 	})
 }
 
+// FactorizeMatrix performs QR decomposition and returns statistics.
+//
+// @Summary Factorize matrix using QR decomposition
+// @Tags Matrix
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.MatrixQRRequest true "Matrix input"
+// @Success 200 {object} dto.MatrixQRResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 422 {object} dto.ErrorResponse
+// @Failure 502 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/v1/matrix/qr [post]
 func (handler *MatrixHandler) FactorizeMatrix(ctx *fiber.Ctx) error {
 	var request dto.MatrixQRRequest
 	if err := ctx.BodyParser(&request); err != nil {

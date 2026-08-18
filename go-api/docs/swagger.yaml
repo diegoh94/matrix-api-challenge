@@ -1,0 +1,194 @@
+basePath: /
+definitions:
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.AuthTokenRequest:
+    properties:
+      apiKey:
+        type: string
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.AuthTokenResponse:
+    properties:
+      expiresIn:
+        type: integer
+      token:
+        type: string
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse:
+    properties:
+      code:
+        example: INVALID_JSON
+        type: string
+      error:
+        example: invalid JSON payload
+        type: string
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.HealthResponse:
+    properties:
+      service:
+        example: go-api
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixDimensionsResponse:
+    properties:
+      cols:
+        type: integer
+      rows:
+        type: integer
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixQRRequest:
+    properties:
+      matrix:
+        items:
+          items:
+            format: float64
+            type: number
+          type: array
+        type: array
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixQRResponse:
+    properties:
+      input:
+        $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixDimensionsResponse'
+      qr:
+        $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixValuesResponse'
+      statistics:
+        $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.StatisticsResponse'
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixValuesResponse:
+    properties:
+      Q:
+        items:
+          items:
+            format: float64
+            type: number
+          type: array
+        type: array
+      R:
+        items:
+          items:
+            format: float64
+            type: number
+          type: array
+        type: array
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.StatisticsResponse:
+    properties:
+      average:
+        type: number
+      diagonalMatrices:
+        items:
+          type: string
+        type: array
+      hasDiagonalMatrix:
+        type: boolean
+      max:
+        type: number
+      min:
+        type: number
+      sum:
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API pública para factorización QR de matrices y obtención de estadísticas.
+  title: Matrix API Challenge — go-api
+  version: "1.0"
+paths:
+  /api/v1/matrix/qr:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Matrix input
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixQRRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixQRResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Factorize matrix using QR decomposition
+      tags:
+      - Matrix
+  /auth/token:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: API key
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.AuthTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.AuthTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+      summary: Issue JWT access token
+      tags:
+      - Auth
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.HealthResponse'
+      summary: Health check
+      tags:
+      - Health
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT token. Format: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

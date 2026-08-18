@@ -1,0 +1,297 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API pública para factorización QR de matrices y obtención de estadísticas.",
+        "title": "Matrix API Challenge — go-api",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/v1/matrix/qr": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Matrix"
+                ],
+                "summary": "Factorize matrix using QR decomposition",
+                "parameters": [
+                    {
+                        "description": "Matrix input",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixQRRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixQRResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/token": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Issue JWT access token",
+                "parameters": [
+                    {
+                        "description": "API key",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.AuthTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.AuthTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.HealthResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.AuthTokenRequest": {
+            "type": "object",
+            "properties": {
+                "apiKey": {
+                    "type": "string"
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.AuthTokenResponse": {
+            "type": "object",
+            "properties": {
+                "expiresIn": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "INVALID_JSON"
+                },
+                "error": {
+                    "type": "string",
+                    "example": "invalid JSON payload"
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "service": {
+                    "type": "string",
+                    "example": "go-api"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixDimensionsResponse": {
+            "type": "object",
+            "properties": {
+                "cols": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "type": "integer"
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixQRRequest": {
+            "type": "object",
+            "properties": {
+                "matrix": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number",
+                            "format": "float64"
+                        }
+                    }
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixQRResponse": {
+            "type": "object",
+            "properties": {
+                "input": {
+                    "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixDimensionsResponse"
+                },
+                "qr": {
+                    "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixValuesResponse"
+                },
+                "statistics": {
+                    "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.StatisticsResponse"
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixValuesResponse": {
+            "type": "object",
+            "properties": {
+                "Q": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number",
+                            "format": "float64"
+                        }
+                    }
+                },
+                "R": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number",
+                            "format": "float64"
+                        }
+                    }
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.StatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "average": {
+                    "type": "number"
+                },
+                "diagonalMatrices": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "hasDiagonalMatrix": {
+                    "type": "boolean"
+                },
+                "max": {
+                    "type": "number"
+                },
+                "min": {
+                    "type": "number"
+                },
+                "sum": {
+                    "type": "number"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "JWT token. Format: Bearer {token}",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

@@ -5,8 +5,13 @@ type MatrixQRRequest struct {
 }
 
 type ErrorResponse struct {
-	Error string `json:"error"`
-	Code  string `json:"code"`
+	Error string `json:"error" example:"invalid JSON payload"`
+	Code  string `json:"code" example:"INVALID_JSON"`
+}
+
+type HealthResponse struct {
+	Status  string `json:"status" example:"ok"`
+	Service string `json:"service" example:"go-api"`
 }
 
 type AuthTokenRequest struct {

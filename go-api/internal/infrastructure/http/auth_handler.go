@@ -19,6 +19,18 @@ func NewAuthHandler(tokenService *auth.TokenService, apiKey string) *AuthHandler
 	}
 }
 
+// IssueToken generates a JWT access token from a valid API key.
+//
+// @Summary Issue JWT access token
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body dto.AuthTokenRequest true "API key"
+// @Success 200 {object} dto.AuthTokenResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /auth/token [post]
 func (handler *AuthHandler) IssueToken(ctx *fiber.Ctx) error {
 	var request dto.AuthTokenRequest
 	if err := ctx.BodyParser(&request); err != nil {
