@@ -25,5 +25,8 @@ src/main.js               → composition root
 - Controller: HTTP in/out, status codes, delegación al use case
 - StatisticsCalculator / DiagonalMatrixChecker: lógica pura, sin Express
 
+## Runtime
+Node.js >= 24 (ver `.nvmrc`). ESM nativo (`"type": "module"`).
+
 ## Config
 Variable de entorno: `NODE_API_PORT` (default 3000)

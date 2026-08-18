@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## Stack obligatorio
 - `go-api`: Go + Fiber — API pública, factorización QR, orquestación
-- `node-api`: Node.js + Express — servicio interno de estadísticas
+- `node-api`: Node.js >= 24 + Express — servicio interno de estadísticas
 - Docker + Docker Compose para ejecución local
 
 ## Fuera de alcance del core

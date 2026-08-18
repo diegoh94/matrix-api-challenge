@@ -1,0 +1,10 @@
+{
+  "name": "node-api",
+  "version": "1.0.0",
+  "description": "Statistics API for matrix QR decomposition results",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  }
+}
