@@ -5,6 +5,7 @@ services:
     container_name: node-api
     environment:
       NODE_API_PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
     expose:
       - "3000"
     healthcheck:
@@ -25,6 +26,9 @@ services:
       GO_API_PORT: 8080
       NODE_API_URL: http://node-api:3000
       NODE_API_TIMEOUT_MS: 5000
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
+      API_KEY: ${API_KEY:-change-me-api-key}
     depends_on:
       node-api:
         condition: service_healthy
