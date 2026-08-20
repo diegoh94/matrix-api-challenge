@@ -2,9 +2,12 @@
 
 Solución al challenge de Interseguro: el cliente envía una matriz, go-api la procesa (factorización QR o rotación), node-api calcula estadísticas, y todo vuelve en una sola respuesta.
 
-Operaciones disponibles:
-- **QR** — descomposición A = Q×R con Gonum
-- **Rotación** — 90°, 180° o 270° horario por reordenamiento O(m×n)
+## Operaciones
+
+| Operación | Endpoint | Descripción |
+|-----------|----------|-------------|
+| **QR** | `POST /api/v1/matrix/qr` | Descomposición A = Q×R con Gonum (Householder) |
+| **Rotación** | `POST /api/v1/matrix/rotate` | 90°, 180° o 270° horario por reordenamiento O(m×n) |
 
 Las decisiones de diseño están en [DECISIONS.md](docs/DECISIONS.md).
 
@@ -18,6 +21,8 @@ Las decisiones de diseño están en [DECISIONS.md](docs/DECISIONS.md).
 
 Railway corre tres servicios: `go-api` y `frontend` expuestos, `node-api` accesible solo por red privada.
 
+El frontend ofrece dos acciones sobre la misma matriz de entrada: **Calcular QR** y **Rotar** (selector 90° / 180° / 270°). Comparte autenticación JWT con cache en memoria.
+
 ## Cómo está armado
 
 ```text
@@ -29,23 +34,38 @@ Cliente → go-api (Go + Fiber) ──HTTP──► node-api (Node + Express)
 
 Go es la API pública y orquesta el flujo. El cliente nunca llama a node-api directo.
 
-Cada servicio tiene capas `domain` → `application` → `infrastructure`. La factorización usa [Gonum](https://gonum.org/v1/gonum) (`mat.QR`, Householder) — preferí una librería numérica probada antes que reimplementar el algoritmo. Sin base de datos: el procesamiento es en memoria.
+Cada servicio tiene capas `domain` → `application` → `infrastructure`. La factorización usa [Gonum](https://gonum.org/v1/gonum) (`mat.QR`, Householder). La rotación vive en `domain/matrix_rotation.go` (reordenamiento por índices, sin trigonometría). Sin base de datos: todo el procesamiento es en memoria.
 
-Si node-api no responde, go-api devuelve **502** y no entrega un QR incompleto.
+Si node-api no responde, go-api devuelve **502** y no entrega resultado parcial (ni QR ni matriz rotada sin estadísticas).
 
-El cuello de botella matemático es la factorización QR (O(m·n²) con Householder); las estadísticas en Node son O(m·n) y no pesan en matrices pequeñas. Para el tamaño típico del challenge no hace falta optimizar, aunque habría margen: un solo pase para max/min/sum, menos copias al convertir entre `[][]float64` y `mat.Dense`, o serialización binaria si Q y R fueran muy grandes.
+### Complejidad
+
+| Parte | Complejidad | Notas |
+|-------|-------------|-------|
+| QR (Householder) | O(m·n²) | Cuello de botella en matrices grandes |
+| Rotación | O(m·n) | Un pase por elemento |
+| Estadísticas (Node) | O(m·n) | Sobre los valores enviados (Q+R o matriz rotada) |
 
 ## JWT
 
 Implementado en ambas APIs con el mismo `JWT_SECRET`. Go reenvía el token a Node en cada llamada interna.
 
 ```text
-POST /auth/token          →  { "apiKey": "..." }  →  JWT (HS256)
-POST /api/v1/matrix/qr    →  Authorization: Bearer <token>
-POST /api/v1/matrix/rotate →  Authorization: Bearer <token>  (degrees: 90|180|270, default 90)
+POST /auth/token             →  { "apiKey": "..." }  →  JWT (HS256)
+POST /api/v1/matrix/qr       →  Authorization: Bearer <token>
+POST /api/v1/matrix/rotate   →  Authorization: Bearer <token>
 ```
 
-El frontend obtiene el token automáticamente al compilar (`VITE_API_KEY`) y lo **cachea en memoria** usando `expiresIn` del backend, reutilizándolo en operaciones siguientes y renovándolo si recibe 401. En producción usaría `POST /auth/session` en go-api para no embeber la API key en el bundle.
+Ejemplo rotación (default `degrees: 90` si se omite):
+
+```json
+{
+  "matrix": [[1, 2], [3, 4], [5, 6]],
+  "degrees": 180
+}
+```
+
+El frontend obtiene el token al compilar (`VITE_API_KEY`) y lo **cachea en memoria** usando `expiresIn`, reutilizándolo en operaciones siguientes y renovándolo si recibe 401. En producción usaría `POST /auth/session` en go-api para no embeber la API key en el bundle.
 
 ## Correr en local
 
@@ -59,6 +79,8 @@ docker compose up --build
 | go-api | http://localhost:8080 |
 | Swagger | http://localhost:8080/docs/index.html |
 
+Tras cambios en el frontend hay que **reconstruir la imagen** (`--build`); un simple restart no actualiza el bundle de Vite.
+
 ## Tests
 
 ```bash
@@ -68,6 +90,6 @@ cd node-api && npm test
 
 ## Documentación
 
-- [Arquitectura](docs/ARCHITECTURE.md) — capas, flujo de petición, Docker
-- [Decisiones](docs/DECISIONS.md) — por qué QR, Gonum, respuesta atómica, etc.
+- [Arquitectura](docs/ARCHITECTURE.md) — capas, flujos QR y rotación, Docker
+- [Decisiones](docs/DECISIONS.md) — QR vs rotación, algoritmo, respuesta atómica, etc.
 - [OpenAPI](docs/openapi.md) — contrato y regeneración de Swagger

@@ -83,6 +83,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/matrix/rotate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Matrix"
+                ],
+                "summary": "Rotate matrix 90, 180 or 270 degrees clockwise",
+                "parameters": [
+                    {
+                        "description": "Matrix input and rotation angle",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixRotateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixRotateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    },
+                    "502": {
+                        "description": "Bad Gateway",
+                        "schema": {
+                            "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/token": {
             "post": {
                 "consumes": [
@@ -240,6 +302,41 @@ const docTemplate = `{
                 }
             }
         },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixRotateRequest": {
+            "type": "object",
+            "properties": {
+                "degrees": {
+                    "type": "integer"
+                },
+                "matrix": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number",
+                            "format": "float64"
+                        }
+                    }
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixRotateResponse": {
+            "type": "object",
+            "properties": {
+                "degrees": {
+                    "type": "integer"
+                },
+                "input": {
+                    "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixDimensionsResponse"
+                },
+                "rotated": {
+                    "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.RotatedMatrixResponse"
+                },
+                "statistics": {
+                    "$ref": "#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.StatisticsResponse"
+                }
+            }
+        },
         "matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixValuesResponse": {
             "type": "object",
             "properties": {
@@ -262,6 +359,27 @@ const docTemplate = `{
                             "format": "float64"
                         }
                     }
+                }
+            }
+        },
+        "matrix-api-challenge_go-api_internal_infrastructure_http_dto.RotatedMatrixResponse": {
+            "type": "object",
+            "properties": {
+                "cols": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number",
+                            "format": "float64"
+                        }
+                    }
+                },
+                "rows": {
+                    "type": "integer"
                 }
             }
         },
@@ -309,7 +427,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Matrix API Challenge — go-api",
-	Description:      "API pública para factorización QR de matrices y obtención de estadísticas.",
+	Description:      "API pública para factorización QR, rotación de matrices y obtención de estadísticas.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

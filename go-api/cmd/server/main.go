@@ -1,6 +1,6 @@
 // @title Matrix API Challenge — go-api
 // @version 1.0
-// @description API pública para factorización QR de matrices y obtención de estadísticas.
+// @description API pública para factorización QR, rotación de matrices y obtención de estadísticas.
 // @host localhost:8080
 // @BasePath /
 // @securityDefinitions.apikey BearerAuth

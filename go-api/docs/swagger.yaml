@@ -56,6 +56,29 @@ definitions:
       statistics:
         $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.StatisticsResponse'
     type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixRotateRequest:
+    properties:
+      degrees:
+        type: integer
+      matrix:
+        items:
+          items:
+            format: float64
+            type: number
+          type: array
+        type: array
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixRotateResponse:
+    properties:
+      degrees:
+        type: integer
+      input:
+        $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixDimensionsResponse'
+      rotated:
+        $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.RotatedMatrixResponse'
+      statistics:
+        $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.StatisticsResponse'
+    type: object
   matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixValuesResponse:
     properties:
       Q:
@@ -72,6 +95,20 @@ definitions:
             type: number
           type: array
         type: array
+    type: object
+  matrix-api-challenge_go-api_internal_infrastructure_http_dto.RotatedMatrixResponse:
+    properties:
+      cols:
+        type: integer
+      data:
+        items:
+          items:
+            format: float64
+            type: number
+          type: array
+        type: array
+      rows:
+        type: integer
     type: object
   matrix-api-challenge_go-api_internal_infrastructure_http_dto.StatisticsResponse:
     properties:
@@ -93,7 +130,8 @@ definitions:
 host: localhost:8080
 info:
   contact: {}
-  description: API pública para factorización QR de matrices y obtención de estadísticas.
+  description: API pública para factorización QR, rotación de matrices y obtención
+    de estadísticas.
   title: Matrix API Challenge — go-api
   version: "1.0"
 paths:
@@ -138,6 +176,45 @@ paths:
       security:
       - BearerAuth: []
       summary: Factorize matrix using QR decomposition
+      tags:
+      - Matrix
+  /api/v1/matrix/rotate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Matrix input and rotation angle
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixRotateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.MatrixRotateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/matrix-api-challenge_go-api_internal_infrastructure_http_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Rotate matrix 90, 180 or 270 degrees clockwise
       tags:
       - Matrix
   /auth/token:
