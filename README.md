@@ -40,7 +40,7 @@ POST /auth/token   →  { "apiKey": "..." }  →  JWT (HS256)
 POST /api/v1/matrix/qr  →  Authorization: Bearer <token>
 ```
 
-El frontend obtiene el token automáticamente al compilar (`VITE_API_KEY`). Sirve para la demo; en un entorno real la API key no iría en el bundle del navegador — quedaría solo en el servidor.
+El frontend obtiene el token automáticamente al compilar (`VITE_API_KEY`) y lo **cachea en memoria** usando `expiresIn` del backend, reutilizándolo en operaciones siguientes y renovándolo si recibe 401. En producción usaría `POST /auth/session` en go-api para no embeber la API key en el bundle.
 
 ## Correr en local
 
