@@ -1,11 +1,26 @@
 import { useState } from 'react';
-import { factorizeMatrix, parseMatrixInput } from './api.js';
+import { factorizeMatrix, parseMatrixInput, rotateMatrix } from './api.js';
 
 const DEFAULT_MATRIX = `[
   [1, 2],
   [3, 4],
   [5, 6]
 ]`;
+
+const OPERATIONS = {
+  qr: {
+    label: 'Calcular QR y estadísticas',
+    loadingLabel: 'Factorizando…',
+    title: 'Matrix QR',
+    description: 'Matriz → factorización QR (Q, R) → estadísticas sobre Q y R.',
+  },
+  rotate: {
+    label: 'Rotar 90° y estadísticas',
+    loadingLabel: 'Rotando…',
+    title: 'Matrix Rotate',
+    description: 'Matriz → rotación 90° horario → estadísticas sobre la matriz rotada.',
+  },
+};
 
 function Section({ step, title, hint, children }) {
   return (
@@ -48,23 +63,59 @@ function MatrixTable({ title, data }) {
   );
 }
 
+function StatisticsPanel({ statistics, hint }) {
+  return (
+    <Section step={3} title="Estadísticas" hint={hint}>
+      <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+        <div>
+          <dt className="text-stone-500">Máximo</dt>
+          <dd className="font-mono font-medium">{statistics.max}</dd>
+        </div>
+        <div>
+          <dt className="text-stone-500">Mínimo</dt>
+          <dd className="font-mono font-medium">{statistics.min}</dd>
+        </div>
+        <div>
+          <dt className="text-stone-500">Promedio</dt>
+          <dd className="font-mono font-medium">{statistics.average}</dd>
+        </div>
+        <div>
+          <dt className="text-stone-500">Suma</dt>
+          <dd className="font-mono font-medium">{statistics.sum}</dd>
+        </div>
+      </dl>
+      <p className="mt-3 text-sm text-stone-600">
+        ¿Matriz diagonal? {statistics.hasDiagonalMatrix ? 'Sí' : 'No'}
+        {statistics.diagonalMatrices.length > 0 &&
+          ` — ${statistics.diagonalMatrices.join(', ')}`}
+      </p>
+    </Section>
+  );
+}
+
 export default function App() {
   const [matrixText, setMatrixText] = useState(DEFAULT_MATRIX);
   const [submittedMatrix, setSubmittedMatrix] = useState(null);
   const [result, setResult] = useState(null);
+  const [operation, setOperation] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event, selectedOperation) {
     event.preventDefault();
     setError('');
     setResult(null);
     setSubmittedMatrix(null);
+    setOperation(selectedOperation);
     setLoading(true);
 
     try {
       const matrix = parseMatrixInput(matrixText);
-      const data = await factorizeMatrix(matrix);
+      const data =
+        selectedOperation === 'qr'
+          ? await factorizeMatrix(matrix)
+          : await rotateMatrix(matrix, 90);
+
       setSubmittedMatrix(matrix);
       setResult(data);
     } catch (submitError) {
@@ -74,16 +125,18 @@ export default function App() {
     }
   }
 
+  const activeOperation = operation ? OPERATIONS[operation] : OPERATIONS.qr;
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <header className="mb-8">
-        <h1 className="text-2xl font-bold">Matrix QR</h1>
+        <h1 className="text-2xl font-bold">Matrix API</h1>
         <p className="mt-1 text-sm text-stone-600">
-          Matriz → factorización QR (Q, R) → estadísticas sobre Q y R.
+          Factorización QR o rotación 90° con estadísticas desde node-api.
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-stone-300 bg-white p-4">
+      <form className="space-y-4 rounded-lg border border-stone-300 bg-white p-4">
         <label className="block">
           <span className="mb-1 block text-sm font-medium">Matriz de entrada (JSON)</span>
           <textarea
@@ -94,13 +147,26 @@ export default function App() {
           />
         </label>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded bg-stone-800 px-4 py-2 text-sm text-white hover:bg-stone-700 disabled:opacity-50"
-        >
-          {loading ? 'Procesando…' : 'Calcular QR y estadísticas'}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={(event) => handleSubmit(event, 'qr')}
+            className="rounded bg-stone-800 px-4 py-2 text-sm text-white hover:bg-stone-700 disabled:opacity-50"
+          >
+            {loading && operation === 'qr' ? OPERATIONS.qr.loadingLabel : OPERATIONS.qr.label}
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={(event) => handleSubmit(event, 'rotate')}
+            className="rounded border border-stone-800 px-4 py-2 text-sm text-stone-800 hover:bg-stone-100 disabled:opacity-50"
+          >
+            {loading && operation === 'rotate'
+              ? OPERATIONS.rotate.loadingLabel
+              : OPERATIONS.rotate.label}
+          </button>
+        </div>
       </form>
 
       {error && (
@@ -109,7 +175,7 @@ export default function App() {
         </p>
       )}
 
-      {result && submittedMatrix && (
+      {result && submittedMatrix && operation === 'qr' && (
         <div className="mt-6 space-y-4">
           <Section step={1} title="Matriz de entrada" hint="Datos enviados a go-api.">
             <MatrixTable data={submittedMatrix} />
@@ -126,36 +192,38 @@ export default function App() {
             </div>
           </Section>
 
-          <Section
-            step={3}
-            title="Estadísticas"
+          <StatisticsPanel
+            statistics={result.statistics}
             hint="node-api calcula sobre todos los valores de Q y R."
-          >
-            <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-              <div>
-                <dt className="text-stone-500">Máximo</dt>
-                <dd className="font-mono font-medium">{result.statistics.max}</dd>
-              </div>
-              <div>
-                <dt className="text-stone-500">Mínimo</dt>
-                <dd className="font-mono font-medium">{result.statistics.min}</dd>
-              </div>
-              <div>
-                <dt className="text-stone-500">Promedio</dt>
-                <dd className="font-mono font-medium">{result.statistics.average}</dd>
-              </div>
-              <div>
-                <dt className="text-stone-500">Suma</dt>
-                <dd className="font-mono font-medium">{result.statistics.sum}</dd>
-              </div>
-            </dl>
-            <p className="mt-3 text-sm text-stone-600">
-              ¿Matriz diagonal? {result.statistics.hasDiagonalMatrix ? 'Sí' : 'No'}
-              {result.statistics.diagonalMatrices.length > 0 &&
-                ` — ${result.statistics.diagonalMatrices.join(', ')}`}
-            </p>
-          </Section>
+          />
         </div>
+      )}
+
+      {result && submittedMatrix && operation === 'rotate' && (
+        <div className="mt-6 space-y-4">
+          <Section step={1} title="Matriz de entrada" hint="Datos enviados a go-api.">
+            <MatrixTable data={submittedMatrix} />
+          </Section>
+
+          <Section
+            step={2}
+            title={`Rotación ${result.degrees}° horario`}
+            hint="Reordenamiento por índices — O(m×n), sin trigonometría."
+          >
+            <MatrixTable data={result.rotated.data} />
+          </Section>
+
+          <StatisticsPanel
+            statistics={result.statistics}
+            hint="node-api calcula sobre todos los valores de la matriz rotada."
+          />
+        </div>
+      )}
+
+      {!result && (
+        <p className="mt-4 text-sm text-stone-500">
+          Operación activa: {activeOperation.description}
+        </p>
       )}
     </main>
   );

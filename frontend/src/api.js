@@ -57,23 +57,42 @@ async function postMatrixQr(matrix, token) {
   });
 }
 
-export async function factorizeMatrix(matrix) {
+async function postMatrixRotate(matrix, degrees, token) {
+  return fetch(`${API_BASE}/api/v1/matrix/rotate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ matrix, degrees }),
+  });
+}
+
+async function postWithAuthRetry(requestFn) {
   let token = await getAccessToken();
-  let response = await postMatrixQr(matrix, token);
+  let response = await requestFn(token);
 
   if (response.status === 401) {
     clearTokenCache();
     token = await fetchTokenFromApi();
-    response = await postMatrixQr(matrix, token);
+    response = await requestFn(token);
   }
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error ?? 'Error al factorizar la matriz');
+    throw new Error(data.error ?? 'Error al procesar la matriz');
   }
 
   return data;
+}
+
+export async function factorizeMatrix(matrix) {
+  return postWithAuthRetry((token) => postMatrixQr(matrix, token));
+}
+
+export async function rotateMatrix(matrix, degrees = 90) {
+  return postWithAuthRetry((token) => postMatrixRotate(matrix, degrees, token));
 }
 
 export function parseMatrixInput(rawValue) {
