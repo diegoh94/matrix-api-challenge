@@ -7,18 +7,17 @@ const DEFAULT_MATRIX = `[
   [5, 6]
 ]`;
 
+const ROTATION_ANGLES = [90, 180, 270];
+
 const OPERATIONS = {
   qr: {
     label: 'Calcular QR y estadísticas',
     loadingLabel: 'Factorizando…',
-    title: 'Matrix QR',
     description: 'Matriz → factorización QR (Q, R) → estadísticas sobre Q y R.',
   },
   rotate: {
-    label: 'Rotar 90° y estadísticas',
     loadingLabel: 'Rotando…',
-    title: 'Matrix Rotate',
-    description: 'Matriz → rotación 90° horario → estadísticas sobre la matriz rotada.',
+    description: 'Matriz → rotación horario → estadísticas sobre la matriz rotada.',
   },
 };
 
@@ -98,6 +97,7 @@ export default function App() {
   const [submittedMatrix, setSubmittedMatrix] = useState(null);
   const [result, setResult] = useState(null);
   const [operation, setOperation] = useState(null);
+  const [rotationDegrees, setRotationDegrees] = useState(90);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -114,7 +114,7 @@ export default function App() {
       const data =
         selectedOperation === 'qr'
           ? await factorizeMatrix(matrix)
-          : await rotateMatrix(matrix, 90);
+          : await rotateMatrix(matrix, rotationDegrees);
 
       setSubmittedMatrix(matrix);
       setResult(data);
@@ -125,14 +125,12 @@ export default function App() {
     }
   }
 
-  const activeOperation = operation ? OPERATIONS[operation] : OPERATIONS.qr;
-
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <header className="mb-8">
         <h1 className="text-2xl font-bold">Matrix API</h1>
         <p className="mt-1 text-sm text-stone-600">
-          Factorización QR o rotación 90° con estadísticas desde node-api.
+          Factorización QR o rotación (90° / 180° / 270°) con estadísticas desde node-api.
         </p>
       </header>
 
@@ -147,7 +145,7 @@ export default function App() {
           />
         </label>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             disabled={loading}
@@ -156,6 +154,21 @@ export default function App() {
           >
             {loading && operation === 'qr' ? OPERATIONS.qr.loadingLabel : OPERATIONS.qr.label}
           </button>
+
+          <select
+            value={rotationDegrees}
+            onChange={(event) => setRotationDegrees(Number(event.target.value))}
+            disabled={loading}
+            aria-label="Grados de rotación"
+            className="rounded border border-stone-300 px-3 py-2 text-sm disabled:opacity-50"
+          >
+            {ROTATION_ANGLES.map((angle) => (
+              <option key={angle} value={angle}>
+                {angle}° horario
+              </option>
+            ))}
+          </select>
+
           <button
             type="button"
             disabled={loading}
@@ -164,7 +177,7 @@ export default function App() {
           >
             {loading && operation === 'rotate'
               ? OPERATIONS.rotate.loadingLabel
-              : OPERATIONS.rotate.label}
+              : `Rotar ${rotationDegrees}° y estadísticas`}
           </button>
         </div>
       </form>
@@ -222,7 +235,9 @@ export default function App() {
 
       {!result && (
         <p className="mt-4 text-sm text-stone-500">
-          Operación activa: {activeOperation.description}
+          {operation === 'rotate'
+            ? `Rotación seleccionada: ${rotationDegrees}° horario. ${OPERATIONS.rotate.description}`
+            : `Operación QR: ${OPERATIONS.qr.description}`}
         </p>
       )}
     </main>
