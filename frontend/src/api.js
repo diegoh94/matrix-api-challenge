@@ -1,7 +1,21 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
 const API_KEY = import.meta.env.VITE_API_KEY ?? '';
 
-async function requestToken() {
+const TOKEN_REFRESH_MARGIN_MS = 60_000;
+
+let cachedToken = null;
+let expiresAtMs = 0;
+
+function isCachedTokenValid() {
+  return cachedToken !== null && Date.now() < expiresAtMs - TOKEN_REFRESH_MARGIN_MS;
+}
+
+function clearTokenCache() {
+  cachedToken = null;
+  expiresAtMs = 0;
+}
+
+async function fetchTokenFromApi() {
   if (!API_KEY) {
     throw new Error('Frontend sin VITE_API_KEY configurada');
   }
@@ -18,13 +32,22 @@ async function requestToken() {
     throw new Error(data.error ?? 'No se pudo obtener el token');
   }
 
-  return data.token;
+  cachedToken = data.token;
+  expiresAtMs = Date.now() + data.expiresIn * 1000;
+
+  return cachedToken;
 }
 
-export async function factorizeMatrix(matrix) {
-  const token = await requestToken();
+async function getAccessToken() {
+  if (isCachedTokenValid()) {
+    return cachedToken;
+  }
 
-  const response = await fetch(`${API_BASE}/api/v1/matrix/qr`, {
+  return fetchTokenFromApi();
+}
+
+async function postMatrixQr(matrix, token) {
+  return fetch(`${API_BASE}/api/v1/matrix/qr`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -32,6 +55,17 @@ export async function factorizeMatrix(matrix) {
     },
     body: JSON.stringify({ matrix }),
   });
+}
+
+export async function factorizeMatrix(matrix) {
+  let token = await getAccessToken();
+  let response = await postMatrixQr(matrix, token);
+
+  if (response.status === 401) {
+    clearTokenCache();
+    token = await fetchTokenFromApi();
+    response = await postMatrixQr(matrix, token);
+  }
 
   const data = await response.json();
 
