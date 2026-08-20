@@ -10,15 +10,14 @@ export class DiagonalMatrixChecker {
       return false;
     }
 
-    for (let rowIndex = 0; rowIndex < matrix.rowCount; rowIndex += 1) {
-      for (let columnIndex = 0; columnIndex < matrix.columnCount; columnIndex += 1) {
-        if (rowIndex === columnIndex) {
-          continue;
-        }
+    const size = matrix.rowCount;
 
-        const value = matrix.data[rowIndex][columnIndex];
-
-        if (Math.abs(value) > this.epsilon) {
+    for (let rowIndex = 0; rowIndex < size; rowIndex += 1) {
+      for (let columnIndex = rowIndex + 1; columnIndex < size; columnIndex += 1) {
+        if (
+          Math.abs(matrix.data[rowIndex][columnIndex]) > this.epsilon ||
+          Math.abs(matrix.data[columnIndex][rowIndex]) > this.epsilon
+        ) {
           return false;
         }
       }

@@ -2,18 +2,36 @@ import { DomainError, ErrorCodes } from '../../domain/errors/DomainError.js';
 
 export class StatisticsCalculator {
   computeFromMatrices(matrices) {
-    const values = matrices.flatMap((matrix) => matrix.flattenValues());
+    let max = Number.NEGATIVE_INFINITY;
+    let min = Number.POSITIVE_INFINITY;
+    let sum = 0;
+    let count = 0;
 
-    if (values.length === 0) {
+    for (const matrix of matrices) {
+      for (const row of matrix.data) {
+        for (const value of row) {
+          if (value > max) {
+            max = value;
+          }
+
+          if (value < min) {
+            min = value;
+          }
+
+          sum += value;
+          count += 1;
+        }
+      }
+    }
+
+    if (count === 0) {
       throw new DomainError('No values available for statistics', ErrorCodes.NO_VALUES);
     }
 
-    const sum = values.reduce((accumulator, value) => accumulator + value, 0);
-
     return {
-      max: Math.max(...values),
-      min: Math.min(...values),
-      average: sum / values.length,
+      max,
+      min,
+      average: sum / count,
       sum,
     };
   }

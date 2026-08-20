@@ -43,3 +43,12 @@ test('rejects matrices with meaningful off-diagonal values', () => {
 
   assert.equal(checker.isDiagonal(notDiagonal), false);
 });
+
+test('rejects off-diagonal values below the diagonal', () => {
+  const lowerOffDiagonal = new Matrix('lower', [
+    [5, 0],
+    [0.001, 4],
+  ]);
+
+  assert.equal(checker.isDiagonal(lowerOffDiagonal), false);
+});
