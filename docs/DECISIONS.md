@@ -4,13 +4,25 @@ Registro de decisiones relevantes del proyecto.
 
 ---
 
-## QR vs rotación de matriz
+## QR y rotación de matriz
 
-**Contexto:** El enunciado menciona rotación en la arquitectura general, pero especifica factorización QR en los requisitos funcionales.
+**Contexto:** El enunciado menciona rotación en la arquitectura general y factorización QR en los requisitos funcionales. En la evaluación se penalizó la ausencia de rotación.
 
-**Decisión:** Implementar factorización QR.
+**Decisión:** Implementar ambas operaciones como endpoints separados:
+- `POST /api/v1/matrix/qr` — factorización QR (Q, R)
+- `POST /api/v1/matrix/rotate` — rotación 90°, 180° o 270° horario
 
-**Motivo:** Es el requerimiento con mayor especificidad. Produce matrices Q y R con un contrato claro para la comunicación con node-api.
+**Motivo:** Cada operación tiene su contrato y caso de uso. Comparten autenticación JWT y el gateway de estadísticas hacia node-api (`NamedMatrix[]`).
+
+---
+
+## Algoritmo de rotación
+
+**Contexto:** Rotar una matriz puede hacerse con trigonometría, multiplicación por matrices de rotación o reordenamiento por índices.
+
+**Decisión:** Reordenamiento por índices — O(m×n) tiempo, O(m×n) espacio, sin trigonometría.
+
+**Motivo:** Para rotaciones discretas de 90°/180°/270° es la opción más eficiente y escalable: un solo pase sobre los elementos, funciona en matrices rectangulares, sin errores de punto flotante por seno/coseno, y escala linealmente con el tamaño de la matriz.
 
 ---
 

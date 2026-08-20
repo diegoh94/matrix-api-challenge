@@ -1,8 +1,12 @@
 # Matrix API Challenge
 
-Solución al challenge de Interseguro: el cliente envía una matriz, go-api la factoriza en Q y R, node-api calcula estadísticas sobre ambas, y todo vuelve en una sola respuesta.
+Solución al challenge de Interseguro: el cliente envía una matriz, go-api la procesa (factorización QR o rotación), node-api calcula estadísticas, y todo vuelve en una sola respuesta.
 
-Cuando el enunciado dice **QR**, hablamos de factorización matricial (A = Q×R), no de códigos QR ni rotación. Las decisiones de diseño están en [DECISIONS.md](docs/DECISIONS.md).
+Operaciones disponibles:
+- **QR** — descomposición A = Q×R con Gonum
+- **Rotación** — 90°, 180° o 270° horario por reordenamiento O(m×n)
+
+Las decisiones de diseño están en [DECISIONS.md](docs/DECISIONS.md).
 
 ## Demo en vivo
 
@@ -19,8 +23,8 @@ Railway corre tres servicios: `go-api` y `frontend` expuestos, `node-api` accesi
 ```text
 Cliente → go-api (Go + Fiber) ──HTTP──► node-api (Node + Express)
               │                              │
-              │  QR con Gonum                │  max, min, avg, sum, diagonal
-              └──────── { input, qr, statistics } ◄┘
+              │  QR (Gonum) o rotación       │  max, min, avg, sum, diagonal
+              └──────── { input, result, statistics } ◄┘
 ```
 
 Go es la API pública y orquesta el flujo. El cliente nunca llama a node-api directo.
@@ -36,8 +40,9 @@ El cuello de botella matemático es la factorización QR (O(m·n²) con Househol
 Implementado en ambas APIs con el mismo `JWT_SECRET`. Go reenvía el token a Node en cada llamada interna.
 
 ```text
-POST /auth/token   →  { "apiKey": "..." }  →  JWT (HS256)
-POST /api/v1/matrix/qr  →  Authorization: Bearer <token>
+POST /auth/token          →  { "apiKey": "..." }  →  JWT (HS256)
+POST /api/v1/matrix/qr    →  Authorization: Bearer <token>
+POST /api/v1/matrix/rotate →  Authorization: Bearer <token>  (degrees: 90|180|270, default 90)
 ```
 
 El frontend obtiene el token automáticamente al compilar (`VITE_API_KEY`) y lo **cachea en memoria** usando `expiresIn` del backend, reutilizándolo en operaciones siguientes y renovándolo si recibe 401. En producción usaría `POST /auth/session` en go-api para no embeber la API key en el bundle.
