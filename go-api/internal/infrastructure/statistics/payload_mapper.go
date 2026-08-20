@@ -2,13 +2,26 @@ package statistics
 
 import "matrix-api-challenge/go-api/internal/domain"
 
-func statisticsRequestFromDecomposition(decomposition domain.QRDecomposition) statisticsRequest {
-	return statisticsRequest{
-		Matrices: []namedMatrixPayload{
-			{Name: "Q", Data: decomposition.Q.Data},
-			{Name: "R", Data: decomposition.R.Data},
-		},
+func statisticsRequestFromMatrices(matrices []domain.NamedMatrix) statisticsRequest {
+	payloadMatrices := make([]namedMatrixPayload, len(matrices))
+
+	for index, matrix := range matrices {
+		payloadMatrices[index] = namedMatrixPayload{
+			Name: matrix.Name,
+			Data: matrix.Matrix.Data,
+		}
 	}
+
+	return statisticsRequest{
+		Matrices: payloadMatrices,
+	}
+}
+
+func statisticsRequestFromDecomposition(decomposition domain.QRDecomposition) statisticsRequest {
+	return statisticsRequestFromMatrices([]domain.NamedMatrix{
+		{Name: "Q", Matrix: decomposition.Q},
+		{Name: "R", Matrix: decomposition.R},
+	})
 }
 
 func (response statisticsResponse) toDomainStatistics() domain.Statistics {

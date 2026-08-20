@@ -39,9 +39,9 @@ func NewNodeStatisticsGateway(config GatewayConfig) *NodeStatisticsGateway {
 
 func (gateway *NodeStatisticsGateway) ComputeStatistics(
 	ctx context.Context,
-	decomposition domain.QRDecomposition,
+	matrices []domain.NamedMatrix,
 ) (domain.Statistics, error) {
-	requestBody, err := json.Marshal(statisticsRequestFromDecomposition(decomposition))
+	requestBody, err := json.Marshal(statisticsRequestFromMatrices(matrices))
 	if err != nil {
 		return domain.Statistics{}, domain.ErrStatisticsUnavailable
 	}

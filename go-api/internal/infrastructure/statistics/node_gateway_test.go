@@ -52,17 +52,17 @@ func TestNodeStatisticsGatewayComputeStatistics(t *testing.T) {
 		Timeout: 2 * time.Second,
 	})
 
-	result, err := gateway.ComputeStatistics(context.Background(), domain.QRDecomposition{
-		Q: domain.Matrix{
+	result, err := gateway.ComputeStatistics(context.Background(), []domain.NamedMatrix{
+		{Name: "Q", Matrix: domain.Matrix{
 			Rows: 2,
 			Cols: 2,
 			Data: [][]float64{{1, 0}, {0, 1}},
-		},
-		R: domain.Matrix{
+		}},
+		{Name: "R", Matrix: domain.Matrix{
 			Rows: 2,
 			Cols: 2,
 			Data: [][]float64{{2, 3}, {0, 4}},
-		},
+		}},
 	})
 	if err != nil {
 		t.Fatalf("unexpected gateway error: %v", err)
@@ -88,7 +88,7 @@ func TestNodeStatisticsGatewayReturnsUnavailableOnServerError(t *testing.T) {
 		Timeout: 2 * time.Second,
 	})
 
-	_, err := gateway.ComputeStatistics(context.Background(), domain.QRDecomposition{})
+	_, err := gateway.ComputeStatistics(context.Background(), nil)
 	if !errors.Is(err, domain.ErrStatisticsUnavailable) {
 		t.Fatalf("expected ErrStatisticsUnavailable, got %v", err)
 	}
@@ -121,9 +121,9 @@ func TestNodeStatisticsGatewayForwardsBearerToken(t *testing.T) {
 
 	ctx := auth.ContextWithToken(context.Background(), accessToken)
 
-	_, err := gateway.ComputeStatistics(ctx, domain.QRDecomposition{
-		Q: domain.Matrix{Rows: 1, Cols: 1, Data: [][]float64{{1}}},
-		R: domain.Matrix{Rows: 1, Cols: 1, Data: [][]float64{{1}}},
+	_, err := gateway.ComputeStatistics(ctx, []domain.NamedMatrix{
+		{Name: "Q", Matrix: domain.Matrix{Rows: 1, Cols: 1, Data: [][]float64{{1}}}},
+		{Name: "R", Matrix: domain.Matrix{Rows: 1, Cols: 1, Data: [][]float64{{1}}}},
 	})
 	if err != nil {
 		t.Fatalf("unexpected gateway error: %v", err)

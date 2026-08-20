@@ -31,7 +31,10 @@ func (useCase *FactorizeMatrixUseCase) Execute(
 		return domain.FactorizeMatrixResult{}, err
 	}
 
-	statistics, err := useCase.statisticsGateway.ComputeStatistics(ctx, qrDecomposition)
+	statistics, err := useCase.statisticsGateway.ComputeStatistics(ctx, []domain.NamedMatrix{
+		{Name: "Q", Matrix: qrDecomposition.Q},
+		{Name: "R", Matrix: qrDecomposition.R},
+	})
 	if err != nil {
 		return domain.FactorizeMatrixResult{}, err
 	}

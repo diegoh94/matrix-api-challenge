@@ -28,7 +28,7 @@ type stubStatisticsGateway struct {
 
 func (stub *stubStatisticsGateway) ComputeStatistics(
 	ctx context.Context,
-	_ domain.QRDecomposition,
+	_ []domain.NamedMatrix,
 ) (domain.Statistics, error) {
 	stub.lastCtx = ctx
 	return stub.statistics, stub.err

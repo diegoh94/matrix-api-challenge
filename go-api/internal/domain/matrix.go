@@ -6,6 +6,11 @@ type Matrix struct {
 	Data [][]float64
 }
 
+type NamedMatrix struct {
+	Name string
+	Matrix
+}
+
 type QRDecomposition struct {
 	Q Matrix
 	R Matrix
@@ -23,5 +28,12 @@ type Statistics struct {
 type FactorizeMatrixResult struct {
 	Input      Matrix
 	QR         QRDecomposition
+	Statistics Statistics
+}
+
+type RotateMatrixResult struct {
+	Input      Matrix
+	Degrees    int
+	Rotated    Matrix
 	Statistics Statistics
 }
