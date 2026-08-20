@@ -45,7 +45,8 @@ func buildApplication(appConfig config.Config) *fiber.App {
 	})
 
 	factorizeMatrixUseCase := application.NewFactorizeMatrixUseCase(qrFactorizer, statisticsGateway)
-	matrixHandler := httpadapter.NewMatrixHandler(factorizeMatrixUseCase)
+	rotateMatrixUseCase := application.NewRotateMatrixUseCase(statisticsGateway)
+	matrixHandler := httpadapter.NewMatrixHandler(factorizeMatrixUseCase, rotateMatrixUseCase)
 
 	serverConfig := httpadapter.ServerConfig{
 		AuthEnabled: appConfig.AuthEnabled(),

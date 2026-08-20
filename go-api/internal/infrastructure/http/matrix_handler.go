@@ -17,13 +17,22 @@ type matrixFactorizer interface {
 	Execute(ctx context.Context, matrix domain.Matrix) (domain.FactorizeMatrixResult, error)
 }
 
-type MatrixHandler struct {
-	factorizeMatrixUseCase matrixFactorizer
+type matrixRotator interface {
+	Execute(ctx context.Context, matrix domain.Matrix, degrees int) (domain.RotateMatrixResult, error)
 }
 
-func NewMatrixHandler(factorizeMatrixUseCase matrixFactorizer) *MatrixHandler {
+type MatrixHandler struct {
+	factorizeMatrixUseCase matrixFactorizer
+	rotateMatrixUseCase    matrixRotator
+}
+
+func NewMatrixHandler(
+	factorizeMatrixUseCase matrixFactorizer,
+	rotateMatrixUseCase matrixRotator,
+) *MatrixHandler {
 	return &MatrixHandler{
 		factorizeMatrixUseCase: factorizeMatrixUseCase,
+		rotateMatrixUseCase:    rotateMatrixUseCase,
 	}
 }
 
@@ -77,6 +86,46 @@ func (handler *MatrixHandler) FactorizeMatrix(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(dto.MatrixQRResponseFromDomain(result))
 }
 
+// RotateMatrix rotates a matrix and returns statistics.
+//
+// @Summary Rotate matrix 90, 180 or 270 degrees clockwise
+// @Tags Matrix
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.MatrixRotateRequest true "Matrix input and rotation angle"
+// @Success 200 {object} dto.MatrixRotateResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 502 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/v1/matrix/rotate [post]
+func (handler *MatrixHandler) RotateMatrix(ctx *fiber.Ctx) error {
+	var request dto.MatrixRotateRequest
+	if err := ctx.BodyParser(&request); err != nil {
+		return respondWithError(ctx, fiber.StatusBadRequest, "invalid JSON payload", "INVALID_JSON")
+	}
+
+	matrix, err := domain.NewMatrix(request.Matrix)
+	if err != nil {
+		return respondWithDomainError(ctx, err)
+	}
+
+	degrees := request.Degrees
+	if degrees == 0 {
+		degrees = domain.Rotation90Degrees
+	}
+
+	requestContext := auth.ContextWithToken(ctx.Context(), middleware.AuthTokenFromRequest(ctx))
+
+	result, err := handler.rotateMatrixUseCase.Execute(requestContext, matrix, degrees)
+	if err != nil {
+		return respondWithDomainError(ctx, err)
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(dto.MatrixRotateResponseFromDomain(result))
+}
+
 func respondWithDomainError(ctx *fiber.Ctx, err error) error {
 	if spec, ok := resolveDomainError(err); ok {
 		return respondWithError(ctx, spec.statusCode, err.Error(), spec.code)
@@ -110,6 +159,8 @@ func resolveDomainError(err error) (domainErrorSpec, bool) {
 		return domainErrorSpec{fiber.StatusUnprocessableEntity, "MATRIX_NOT_FACTORIZABLE"}, true
 	case errors.Is(err, domain.ErrStatisticsUnavailable):
 		return domainErrorSpec{fiber.StatusBadGateway, "STATISTICS_UNAVAILABLE"}, true
+	case errors.Is(err, domain.ErrInvalidRotationAngle):
+		return domainErrorSpec{fiber.StatusBadRequest, "INVALID_ROTATION_ANGLE"}, true
 	default:
 		return domainErrorSpec{}, false
 	}

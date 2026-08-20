@@ -40,10 +40,12 @@ func NewServer(
 
 		apiGroup := app.Group("/api/v1", middleware.JWTAuth(serverConfig.TokenService))
 		apiGroup.Post("/matrix/qr", matrixHandler.FactorizeMatrix)
+		apiGroup.Post("/matrix/rotate", matrixHandler.RotateMatrix)
 
 		log.Println("JWT authentication enabled")
 	} else {
 		app.Post("/api/v1/matrix/qr", matrixHandler.FactorizeMatrix)
+		app.Post("/api/v1/matrix/rotate", matrixHandler.RotateMatrix)
 		log.Println("JWT authentication disabled")
 	}
 
